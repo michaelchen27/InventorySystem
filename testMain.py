@@ -1,3 +1,11 @@
+# SDA connects to Pin 24.
+# SCK connects to Pin 23.
+# MOSI connects to Pin 19.
+# MISO connects to Pin 21.
+# GND connects to Pin 6.
+# RST connects to Pin 22.
+# 3.3v connects to Pin 1.
+
 # Gspread Libraries
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
