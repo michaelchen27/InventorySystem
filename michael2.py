@@ -11,6 +11,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from pprint import pprint
 import datetime
+import os
 
 # RFID Libraries
 import RPi.GPIO as GPIO
@@ -38,12 +39,15 @@ print(item_list)
 
 log_sheet = client.open("Inventory System").worksheet("Logs")
 
+
+
 i = 5
 items = []
 item_ids = []
 # Main program Loop
 while True:
     #try:
+        os.system('clear')
         print("Welcome to Lab FTI! Please scan your KTM...")
         id_m, name_m = reader.read()
 
@@ -58,24 +62,20 @@ while True:
                     id_i, name_i = '', ''
                     print("Scan the item, Scan your KTM to end scanning.")
                     id_i, name_i = reader.read()
-
                     if str(id_i) in item_list: 
                         print(f"Item: {name_i}")
                         curr_time = str(datetime.datetime.now())
-
+                        #log_sheet.append_row(newRow)
                         newRow = [id_i, name_i, id_m, name_m, curr_time]
+                        items.append(newRow)
 
-                        log_sheet.append_row(newRow)
-                        #items.append(name_i)
-                        #item_ids.append(id_i)
 
                     else:
                         print("Ending scanning process...")
+                        log_sheet.append_rows(items)
                         #curr_time = datetime.now()
                         print("Success!!!\n")
                         break
-
-
         else:
             print("Not a College Student ID!\n")
 
