@@ -39,11 +39,6 @@ print(item_list)
 
 log_sheet = client.open("Inventory System").worksheet("Logs")
 
-
-
-i = 5
-items = []
-item_ids = []
 # Main program Loop
 while True:
     #try:
@@ -57,25 +52,32 @@ while True:
             choice = int(input("Choice:"))
 
             if choice == 1:
+                items = [] #clear item list
+                item_ids = set() #clear item sets to check for uniques
                 while True:
-
                     id_i, name_i = '', ''
                     print("Scan the item, Scan your KTM to end scanning.")
                     id_i, name_i = reader.read()
-                    if str(id_i) in item_list: 
-                        print(f"Item: {name_i}")
-                        curr_time = str(datetime.datetime.now())
-                        #log_sheet.append_row(newRow)
-                        newRow = [id_i, name_i, id_m, name_m, curr_time]
-                        items.append(newRow)
+                    if str(id_i) in item_list: #check if item exists in DB
+                        if str(id_i) in item_ids: #if item is duplicate 
+                            print(f"Item: {name_i} has already been added") # comment this line to not clutter console?
+                            continue
+                        else: #new item in borrow session
+                            item_ids.add(str(id_i)) #add to set
+                            curr_time = str(datetime.datetime.now())
+                            newRow = [id_i, name_i, id_m, name_m, curr_time]
+                            items.append(newRow)
+                            print(f"Item: {name_i} added")
 
-
-                    else:
+                    elif id_i == id_m:
                         print("Ending scanning process...")
                         log_sheet.append_rows(items)
                         #curr_time = datetime.now()
                         print("Success!!!\n")
                         break
+
+                    else: 
+                        print("RFID Tag not recognized!")
         else:
             print("Not a College Student ID!\n")
 
