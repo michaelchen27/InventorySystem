@@ -29,13 +29,15 @@ scope = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/aut
 creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
 client = gspread.authorize(creds)
 
+# Get Sheets
 mahasiswa_sheet = client.open("Inventory System").worksheet("Mahasiswa")
-mahasiswa_ids = mahasiswa_sheet.col_values(1)
+mahasiswa_ids = mahasiswa_sheet.col_values(1) #Get Student IDs
 
 item_sheet = client.open("Inventory System").worksheet("Items")
 item_list = item_sheet.col_values(1) #Get Item IDs
 
 log_sheet = client.open("Inventory System").worksheet("Logs")
+session_sheet = client.open("Inventory System").worksheet("Session")
 
 # RFID Setup
 reader = SimpleMFRC522()
@@ -70,17 +72,18 @@ while True:
                 items = [] #clear item list
                 item_ids = set() #clear item sets to check for uniques
                 item_indexes = set()
+                sessions = []
                 while True:
                     id_i, name_i = '', ''
                     print("Scan the item, Scan your KTM to finish scanning items.")
                     id_i, name_i = reader.read()
 
-                    id_i = str(id_i)
+                    id_i = str(id_i).strip()
+                    name_i = str(name_i).strip()
                     
                     if id_i in item_list: #check if item exists in DB                    
                         
                         # Get item indexes
-                        print(item_list.index(id_i))
                         item_indexes.add(item_list.index(id_i))
 
                         if id_i in item_ids: #if item is duplicate 
@@ -98,18 +101,30 @@ while True:
                     elif id_i == str(id_m):
                         print("Ending scanning process...")
                         log_sheet.append_rows(items)
-                        #curr_time = datetime.now()
+                        #curr_time = str(datetime.datetime.now())
                         print("Success!!!\n")
-                        print(f"Item indexes:\n {item_indexes}\nPlease Wait...")
+                        print("Please Wait...\n")
 
                         # Update Item Status
-
                         for i in item_indexes:
                             item_sheet.update_cell(i, 3, 'Unavailable')
+                            item_sheet.update_cell(i, 4, str(name_m))
+                        
+                        # Session Sheets
+                        values = set(map(lambda x:x[2], items))
+                        newlist = [[y[1] for y in items if y[2]==x] for x in values]
+                        newlist = newlist[0]
+                        print(newlist)
+                        newlist = ','.join(newlist)
 
-                        sleep(2)
+                        newRow = [id_m, name_m, curr_time, newlist]
+                        sessions.append(newRow)
+
+                        session_sheet.append_rows(sessions)
 
 
+
+                        sleep(10)
                         break
 
                     else: 
