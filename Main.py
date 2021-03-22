@@ -71,18 +71,17 @@ while True:
             if choice == 1:
                 items = [] #clear item list
                 item_ids = set() #clear item sets to check for uniques
-                item_indexes = set()
+                item_indexes = set() #clear item indexes 
                 sessions = []
                 while True:
                     id_i, name_i = '', ''
                     print("Scan the item, Scan your KTM to finish scanning items.")
                     id_i, name_i = reader.read()
 
-                    id_i = str(id_i).strip()
+                    id_i = str(id_i).strip() #remove leading and trailing  
                     name_i = str(name_i).strip()
                     
                     if id_i in item_list: #check if item exists in DB                    
-                        
                         # Get item indexes
                         item_indexes.add(item_list.index(id_i))
 
@@ -98,11 +97,11 @@ while True:
                             print(f"Item: {name_i} added")            
                             flash_led()
 
-                    elif id_i == str(id_m):
+                    elif id_i == str(id_m): #if item scanned is borrower's KTM 
                         print("Ending scanning process...")
                         log_sheet.append_rows(items)
                         #curr_time = str(datetime.datetime.now())
-                        print("Success!!!\n")
+                        
                         print("Please Wait...\n")
 
                         # Update Item Status
@@ -111,20 +110,17 @@ while True:
                             item_sheet.update_cell(i, 4, str(name_m))
                         
                         # Session Sheets
-                        values = set(map(lambda x:x[2], items))
-                        newlist = [[y[1] for y in items if y[2]==x] for x in values]
-                        newlist = newlist[0]
-                        print(newlist)
-                        newlist = ','.join(newlist)
+                        borrowed_ids = set(map(lambda x:x[0], items)) #Get all item_id that is borrowed in this session. Format [id_i, name_i, id_m, name_m, time]
+                        borrowed_ids_string = ','.join(borrowed_ids)
 
-                        newRow = [id_m, name_m, curr_time, newlist]
-                        sessions.append(newRow)
+                        newRow = [id_m, name_m, curr_time, borrowed_ids_string]
+                        #sessions.append(newRow)
 
-                        session_sheet.append_rows(sessions)
+                        session_sheet.append_rows(newRow)
 
+                        print("Success!!!\n")
 
-
-                        sleep(10)
+                        sleep(5)
                         break
 
                     else: 
