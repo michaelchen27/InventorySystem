@@ -1,10 +1,13 @@
-# SDA connects to Pin 24.
-# SCK connects to Pin 23.
-# MOSI connects to Pin 19.
-# MISO connects to Pin 21.
-# GND connects to Pin 6.
-# RST connects to Pin 22.
-# 3.3v connects to Pin 1.
+# SDA   connects to Pin 24.
+# SCK   connects to Pin 23.
+# MOSI  connects to Pin 19.
+# MISO  connects to Pin 21.
+# GND   connects to Pin 6.
+# RST   connects to Pin 22.
+# 3.3v  connects to Pin 1.
+
+# LED_VCC       connects to Pin 12.
+# LED_Ground    connects to Pin 14.
 
 # Gspread Libraries
 import gspread
@@ -39,6 +42,18 @@ print(item_list)
 
 log_sheet = client.open("Inventory System").worksheet("Logs")
 
+
+# LED GPIO Setup
+GPIO.setup(12, GPIO.OUT)
+
+
+def flash_led():
+    GPIO.output(12, GPIO.HIGH)
+    sleep(0.5)
+    GPIO.output(12, GPIO.LOW)
+
+
+
 # Main program Loop
 while True:
     #try:
@@ -47,7 +62,7 @@ while True:
         id_m, name_m = reader.read()
 
         if str(id_m) in mahasiswa_ids:
-            print(f"\nWelcome, {name_m}! ")
+            print(f"\nWelcome, {name_m}!")
             print("What would you like to do? \n1. BORROW Lab Equipment \n2. RETURN Lab Equipment\n")
             choice = int(input("Choice:"))
 
@@ -56,18 +71,21 @@ while True:
                 item_ids = set() #clear item sets to check for uniques
                 while True:
                     id_i, name_i = '', ''
-                    print("Scan the item, Scan your KTM to end scanning.")
+                    print("Scan the item, Scan your KTM to finish scanning items.")
                     id_i, name_i = reader.read()
-                    if str(id_i) in item_list: #check if item exists in DB
+                    
+                    if str(id_i) in item_list: #check if item exists in DB                    
                         if str(id_i) in item_ids: #if item is duplicate 
-                            print(f"Item: {name_i} has already been added") # comment this line to not clutter console?
+                            #print(f"Item: {name_i} has already been added") # comment this line to not clutter console?
                             continue
+                        
                         else: #new item in borrow session
                             item_ids.add(str(id_i)) #add to set
                             curr_time = str(datetime.datetime.now())
                             newRow = [id_i, name_i, id_m, name_m, curr_time]
                             items.append(newRow)
-                            print(f"Item: {name_i} added")
+                            print(f"Item: {name_i} added")            
+                            flash_led()
 
                     elif id_i == id_m:
                         print("Ending scanning process...")
@@ -81,10 +99,6 @@ while True:
         else:
             print("Not a College Student ID!\n")
 
-        #print(f"ID: {id}\nItem Name: {text}")
-        #newRow = [id, text, "Reserved"]
-        #sheet.append_row(newRow)
-        #print("!"*5, "Data Inserted", "!"*5,"\n")
     #finally:
      #   GPIO.cleanup()
       #  sleep(0.5) #sleep for 0.5 second, prevent fast consecutive readings
