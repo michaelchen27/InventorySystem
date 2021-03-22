@@ -91,7 +91,7 @@ while True:
                         
                         else: #new item in borrow session
                             item_ids.add(id_i) #add to set
-                            curr_time = str(datetime.datetime.now())
+                            curr_time = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")
                             newRow = [id_i, name_i, id_m, name_m, curr_time]
                             items.append(newRow)
                             print(f"Item: {name_i} added")            
@@ -106,17 +106,17 @@ while True:
 
                         # Update Item Status
                         for i in item_indexes:
-                            item_sheet.update_cell(i, 3, 'Unavailable')
-                            item_sheet.update_cell(i, 4, str(name_m))
+                            item_sheet.update_cell(i+1, 3, 'Unavailable')
+                            item_sheet.update_cell(i+1, 4, str(name_m))
                         
                         # Session Sheets
                         borrowed_ids = set(map(lambda x:x[0], items)) #Get all item_id that is borrowed in this session. Format [id_i, name_i, id_m, name_m, time]
                         borrowed_ids_string = ','.join(borrowed_ids)
 
                         newRow = [id_m, name_m, curr_time, borrowed_ids_string]
-                        #sessions.append(newRow)
+                        sessions.append(newRow)
 
-                        session_sheet.append_rows(newRow)
+                        session_sheet.append_rows(sessions)
 
                         print("Success!!!\n")
 
@@ -135,6 +135,7 @@ while True:
 
         else:
             print("Not a College Student ID!\n")
+            sleep(1)
 
     #finally:
      #   GPIO.cleanup()
