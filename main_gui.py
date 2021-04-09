@@ -7,8 +7,8 @@ import time
 import random
 
 #RFID IMPORTS, COMMENTED BECAUSE NO ACCESS TO HARDWARE
-# import RPi.GPIO as GPIO
-# from mfrc522 import SimpleMFRC522
+import RPi.GPIO as GPIO
+from mfrc522 import SimpleMFRC522
 
 #GSPREAD IMPORTS
 import gspread
@@ -25,7 +25,7 @@ sh = client.open("Inventory System")
 
 # Get Sheets
 mahasiswa_sheet = sh.worksheet("Mahasiswa")
-mahasiswa_ids = mahasiswa_sheet.col_values(1) #Get Student IDs
+db_mahasiswa_ids = mahasiswa_sheet.col_values(1) #Get Student IDs
 
 item_sheet = sh.worksheet("Items")
 db_item_list = item_sheet.col_values(1) #Get Item IDs
@@ -41,15 +41,15 @@ session_id_list = session_sheet.col_values(6) #get session id list
 
 
 # RFID Setup
-# reader = SimpleMFRC522()
+reader = SimpleMFRC522()
 
 # LED GPIO Setup
-# GPIO.setup(12, GPIO.OUT)
+GPIO.setup(12, GPIO.OUT)
 
-# def flash_led():
-#     GPIO.output(12, GPIO.HIGH)
-#     time.sleep(0.5)
-#     GPIO.output(12, GPIO.LOW)
+def flash_led():
+    GPIO.output(12, GPIO.HIGH)
+    time.sleep(0.5)
+    GPIO.output(12, GPIO.LOW)
 
 
 
@@ -120,16 +120,16 @@ class GUI:
 
     def ktm_scan(self):
         #scanning then returning KTM name
-
-        # while True: #keep scanning until id is recognized
-        #     id, name = reader.read()
-        #     if (str(id) in db_mahasiswa_ids):
-        #        break
-        #     self.message.configure(text="KTM not recognized! Please scan a valid KTM !")
+        id, name = "", ""
+        while True: #keep scanning until id is recognized
+            id, name = reader.read()
+            if (str(id) in db_mahasiswa_ids):
+               break
+            self.message.configure(text="KTM not recognized! Please scan a valid KTM !")
         
         # placeholder code =========================================
-        id, name =  "45025007063", "Michael"
-        time.sleep(2)
+        # id, name =  "45025007063", "Michael"
+        # time.sleep(2)
         # end placeholder code =====================================
         return id, name
 
@@ -155,19 +155,19 @@ class GUI:
 #BORROW FUNCTION, INCLUDES RFID READ AND MANAGING GUI WHILE BORROWING
     def borrow_function(self):
         # DO RFID READS HERE
-        
-        # while True:
-        #     id_item, name_item = reader.read()
-        #     id_item = str(id_item).strip()
-        #     name_item = str(name_item).strip()
-        #     if (id_item in db_item_list or id_item == self.USER_ID):
-        #         break
-        #     self.item_message.configure(text="RFID Tag not recognized! Please scan KTM or Valid Tags only!")
+        id_item, name_item = "", ""
+        while True:
+            id_item, name_item = reader.read()
+            id_item = str(id_item).strip()
+            name_item = str(name_item).strip()
+            if (id_item in db_item_list or id_item == self.USER_ID):
+                break
+            self.item_message.configure(text="RFID Tag not recognized! Please scan KTM or Valid Tags only!")
 
 
         #placeholder code ====================================================
-        id_item, name_item =  "794796054884", "Solder"
-        time.sleep(2)
+        # id_item, name_item =  "794796054884", "Solder"
+        # time.sleep(2)
         #end placeholder code ================================================
 
         return id_item, name_item
