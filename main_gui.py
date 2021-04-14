@@ -123,6 +123,8 @@ class GUI:
         id, name = "", ""
         while True: #keep scanning until id is recognized
             id, name = reader.read()
+            id = str(id).strip()
+            name = str(name).strip()
             if (str(id) in db_mahasiswa_ids):
                break
             self.message.configure(text="KTM not recognized! Please scan a valid KTM !")
