@@ -5,6 +5,16 @@ import queue as Queue
 import threading
 import time
 import random
+import os
+
+#Set Display to :20.0
+if os.environ.get('DISPLAY','') != ':20.0':
+    print('No display found. Using display :20.0')
+    os.environ.__setitem__('DISPLAY', ':20.0')
+
+#in windows Shell 
+#cd C:\Program Files (x86)\Xming
+#xming :20.0 -ac -scrollbars
 
 #RFID IMPORTS, COMMENTED BECAUSE NO ACCESS TO HARDWARE
 import RPi.GPIO as GPIO
@@ -26,6 +36,7 @@ sh = client.open("Inventory System")
 # Get Sheets
 mahasiswa_sheet = sh.worksheet("Mahasiswa")
 db_mahasiswa_ids = mahasiswa_sheet.col_values(1) #Get Student IDs
+db_mahasiswa_name = mahasiswa_sheet.col_values(2) #Get Student Name
 
 item_sheet = sh.worksheet("Items")
 db_item_list = item_sheet.col_values(1) #Get Item IDs
@@ -72,7 +83,7 @@ class GUI:
         self.item_ids = set() #item sets to check for uniques
         self.item_indexes = set() #item indexes 
         self.sessions = [] #session information
-
+        self.borrowMessage = "" #Borrowing Message
 
         #MESSAGE CONFIGURATION
         self.message = Label(self.top_frame, text="Welcome to FTI Lab, please scan your KTM", font=("Arial Bold", 24))
@@ -120,12 +131,12 @@ class GUI:
 
     def ktm_scan(self):
         #scanning then returning KTM name
-        id, name = "", ""
+        id = ""
         while True: #keep scanning until id is recognized
             id, name = reader.read()
             id = str(id).strip()
-            name = str(name).strip()
             if (str(id) in db_mahasiswa_ids):
+               name = str(db_mahasiswa_name[db_mahasiswa_ids.index(id)]).strip()
                break
             self.message.configure(text="KTM not recognized! Please scan a valid KTM !")
         
@@ -180,6 +191,7 @@ class GUI:
         self.item_ids = set() #clear item sets to check for uniques
         self.item_indexes = set() #clear item indexes 
         self.sessions = []
+        self.borrowMessage = "" #Reset Borrowing Message
 
         self.borrow_button['state']=tkinter.DISABLED #disable buttons
         self.return_button['state']=tkinter.DISABLED #disable buttons
@@ -201,20 +213,37 @@ class GUI:
                 self.item_indexes.add(db_item_list.index(id_item))
 
                 if id_item in self.item_ids: #if item is a duplicate
+                    def printbackMessage():
+                        self.item_message.configure(text=f"{self.borrowMessage}")
                     print(f"Item: {name_item} has already been added") # comment this line to not clutter console?
+                    self.item_message.configure(text="Item ")
+                    Item_Name = [Item_Name for Item_Name in self.items if id_item in Item_Name][0]
+                    self.item_message['text'] += Item_Name[1]+" has already been added!"
+                    self.master.after(2000,printbackMessage)
+
                     #continue
                 else:
                     self.item_ids.add(id_item) #add to set
                     curr_time = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")
                     newRow = [id_item, name_item, self.USER_ID, self.USER_NAME, curr_time]
                     self.items.append(newRow)
-                    print(f"Item: {name_item} added")            
+                    print(f"Item: {name_item} added")  
+                    self.borrowMessage = "Item "
+                    for name in self.items:
+                        self.borrowMessage += str(name[1]) 
+                        if (self.items.index(name)+1)!=len(self.items):
+                            self.borrowMessage += ", "
+                    self.borrowMessage +=" will be borrowed."
+                    self.item_message.configure(text=f"{self.borrowMessage}")
                     # flash_led()
-               
-                self.item_message['text'] += name_item + ', ' 
+                
                 ThreadedTask(self.queue, self.borrow_function).start() #start borrow_function at other thread again        
                 self.master.after(100, self.process_borrow) #wait for result again
-            
+            elif id_item == self.USER_ID and len(self.item_ids)==0:
+                self.item_message.configure(text="Borrowing Item Cancelled")
+                self.borrow_button['state']=tkinter.NORMAL #enable buttons
+                self.return_button['state']=tkinter.NORMAL #enable buttons
+
             elif id_item == self.USER_ID: #if ktm, append to gsheet  and end process 
                 print("Ending scanning process...")
                 log_sheet.append_rows(self.items)
