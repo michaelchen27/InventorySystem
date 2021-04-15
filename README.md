@@ -60,27 +60,27 @@ Berdasarkan masalah tersebut, penulis dari grup 1 mengusulkan pembuatan proses p
 
 ## **Hardware Schematic Diagram**
 
-![](RackMultipart20210415-4-mdlhjg_html_8dc95fa25a27c6e9.png)
+![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Hardware%20Schematic.jpg)
 
 - **Pin Raspberry Pi**
+![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Pin.jpg)
+  - SDA connects to Pin 24.
 
-# SDA connects to Pin 24. ![](RackMultipart20210415-4-mdlhjg_html_961560391bf956e9.png)
+  - SCK connects to Pin 23.
 
-# SCK connects to Pin 23.
+  - MOSI connects to Pin 19.
 
-# MOSI connects to Pin 19.
+  - MISO connects to Pin 21.
 
-# MISO connects to Pin 21.
+  - GND connects to Pin 6.
 
-# GND connects to Pin 6.
+  - RST connects to Pin 22.
 
-# RST connects to Pin 22.
+  - 3.3v connects to Pin 1.
 
-# 3.3v connects to Pin 1.
+  - LED\_VCC connects to Pin 12.
 
-# LED\_VCC connects to Pin 12.
-
-# LED\_Ground connects to Pin 14.
+  - LED\_Ground connects to Pin 14.
 
 - **Raspberry Pi dengan RFID Reader**
   - GPIO, dengan SPI Protocol
@@ -97,7 +97,7 @@ Berdasarkan masalah tersebut, penulis dari grup 1 mengusulkan pembuatan proses p
 
 Software module tanpa menggunakan module tkinter sebagai display module adalah sebagai berikut:
 
-![](RackMultipart20210415-4-mdlhjg_html_aee6db9f7d1ee802.png)
+![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Software%20Module.jpg)
 
 Secara garis besar, sistem bekerja berdasarkan modul:
 
@@ -121,7 +121,8 @@ LED digunakan hanya untuk memberi notifikasi ke user bahwa proses pembacaan RFID
 
 Implementasi display diatur oleh Raspbian OS dan built-in library dalam python (i.e., print function). Bentuk display yang diterapkan sekarang hanya berupa console melalui SSH. Rencana penerapan display module berupa menampilkan GUI yang dapat berinteraksi dengan user dan ditampilkan pada suatu monitor.
 
-Berikut adalah software module diagram dengan menggunakan tkinter sebagai Display Module (Graphic User Interface (GUI)) ![](RackMultipart20210415-4-mdlhjg_html_425f3b0f39194a5e.png)
+Berikut adalah software module diagram dengan menggunakan tkinter sebagai Display Module (Graphic User Interface (GUI)) 
+![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Software%20Module.jpg)
 
 - Module tkinter berupa blocking GUI, CPU thread Raspberry Pi tidak dapat menjalankan proses lain ketika menampilkan GUI tersebut.
   - Tkinter berupa event-based programming, maka tkinter module akan block semua proses pada thread sampai suatu event terjadi
@@ -132,7 +133,7 @@ Berikut adalah software module diagram dengan menggunakan tkinter sebagai Displa
 
 ## **Software Relation Diagram**
 
-![](RackMultipart20210415-4-mdlhjg_html_58d529a2ce6b608.png)
+![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Software%20Relation.jpg)
 
 - RFID Reader berkomunikasi dengan Raspberry Pi Zero W dengan protokol komunikasi SPI.
 - RFID Driver yang digunakan adalah SimpleMFRC522 dalam bahasa pemrograman Python, berjalan di dalam Raspberry Pi.
@@ -140,263 +141,3 @@ Berikut adalah software module diagram dengan menggunakan tkinter sebagai Displa
 - OS Raspberry Pi yang memiliki GUI akan ditampilkan kepada user melalui Monitor yang terhubung menggunakan HDMI. Dalam tampilan tersebut akan terdapat tampilan file Google Spreadsheet yang terhubung dengan Raspberry Pi.
 - Sumber tegangan Raspberry Pi didapat dari power socket di tembok melalui adapter dan kabel micro USB.
 - Menyimpan data sementara dari database pada temporary data.
-
-## **Updated Project Timeline**
-
-Berikut updated timeline dari project
-
-| **Project Timeline Embedded** |
-| --- |
-| Activity | Notes | April | May |
-| W1 | W2 | W3 | W4 | W1 | W2 | W3 | W4 |
-| **Obtaining Components** |
- |
- |
- |
- |
- |
- |
- |
- |
-| Raspberry Pi Zero W | The Main Microcontroller |
- |
- |
- |
- |
- |
- |
- |
- |
-| RC522 RFID Reader |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| EL-MF1-T1 RFID Tag |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| MF1 IC S50 |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| General Desktop Monitor (TBD) | Can use any monitor |
- |
- |
- |
- |
- |
- |
- |
- |
-| Mini HDMI to HDMI cable |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| **Wiring &amp; Environment Setup** |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| Setting up Linux Environment | Installing Dependencies and Libraries |
- |
- |
- |
- |
- |
- |
- |
- |
-| Interfacing RFID to Raspberry Pi | Include connectivity test |
- |
- |
- |
- |
- |
- |
- |
- |
-| **Coding** |
- |
- |
- |
- |
- |
- |
- |
- |
-| RFID module code |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| Database module code |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| Wireless connection code |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| Main functionality | Both check and reserve |
- |
- |
- |
- |
- |
- |
- |
- |
-| GUI module code |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| **Testing** |
- |
- |
- |
- |
- |
- |
- |
- |
-| Hardware connectivity |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| Component functionality |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| Software functionality |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| PCB testing and verification |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| **Creating PCB** |
- |
- |
- |
- |
- |
- |
- |
- |
-| **Documentation** |
- |
- |
- |
- |
- |
- |
- |
- |
-| Project documentation |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| User manual |
- |
- |
- |
- |
- |
- |
- |
- |
- |
-| **Finishing** |
- |
- |
- |
- |
- |
- |
- |
- |
-
-- Block dengan warna abu-abu adalah block dengan tugas yang sudah di selesaikan.
