@@ -63,6 +63,7 @@ Berdasarkan masalah tersebut, penulis dari grup 1 mengusulkan pembuatan proses p
 ![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Hardware%20Schematic.jpg)
 
 - **Pin Raspberry Pi**
+
 ![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Pin.jpg)
   - SDA connects to Pin 24.
 
