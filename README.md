@@ -123,6 +123,7 @@ LED digunakan hanya untuk memberi notifikasi ke user bahwa proses pembacaan RFID
 Implementasi display diatur oleh Raspbian OS dan built-in library dalam python (i.e., print function). Bentuk display yang diterapkan sekarang hanya berupa console melalui SSH. Rencana penerapan display module berupa menampilkan GUI yang dapat berinteraksi dengan user dan ditampilkan pada suatu monitor.
 
 Berikut adalah software module diagram dengan menggunakan tkinter sebagai Display Module (Graphic User Interface (GUI)) 
+
 ![](https://github.com/michaelchen27/InventorySystem/blob/master/photos/Software%20Module.jpg)
 
 - Module tkinter berupa blocking GUI, CPU thread Raspberry Pi tidak dapat menjalankan proses lain ketika menampilkan GUI tersebut.
