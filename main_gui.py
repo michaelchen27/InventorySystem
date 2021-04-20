@@ -48,7 +48,7 @@ session_sheet = sh.worksheet("Session")
 session_mahasiswa_id = session_sheet.col_values(1) #get mahasiswa IDs list
 session_item_id = session_sheet.col_values(4) #get borrowed items
 session_item_name = session_sheet.col_values(5) #get borrowed items
-session_id_list = session_sheet.col_values(6) #get session id list
+# session_id_list = session_sheet.col_values(6) #get session id list
 
 
 # RFID Setup
@@ -88,9 +88,15 @@ class GUI:
 
         #MESSAGE CONFIGURATION
         self.message = Label(self.top_frame, text="Welcome to FTI Lab, please scan your KTM", font=("Arial Bold", 24))
-        self.message.pack(side=TOP)
-        self.item_message = Label(self.top_frame, text="", font=("Arial", 16))
-        self.item_message.pack(side=TOP)
+        self.message.pack(side=TOP, padx=10)
+        self.sub_message = Label(self.top_frame, text="", font=("Arial", 16))
+        self.sub_message.pack(side=TOP)
+        self.list_message = Label(self.top_frame, text="", font=("Arial", 14))
+        self.list_message.pack(side=TOP)
+        self.info_message = Label(self.top_frame, text="", font=("Arial", 12))
+        self.info_message.pack(side=TOP)
+        
+        self.label_def_color = self.info_message.cget("bg")
 
 
         #BORROW BUTTON CONFIGURATION
@@ -122,7 +128,13 @@ class GUI:
 
 #Print Temporary Item Message (Stored)    
     def printbackItem_Message(self):
-        self.item_message.configure(text=f"{self.tempitem_Message}")
+        self.sub_message.configure(text=f"{self.tempitem_Message}")
+
+#Modify Info message
+    def clear_info_message(self):
+        self.info_message.configure(text="", relief=FLAT, bg=self.label_def_color)
+    def set_info_message(self, message):
+        self.info_message.configure(text=f"{message}", relief=RIDGE, bg="gold")
 
 #INITIALIZATION ROUTINE, VERIFY USER USING KTM
     def ktm_verify(self):
@@ -132,6 +144,8 @@ class GUI:
             self.USER_ID = id
             self.USER_NAME = msg
             self.message.configure(text="Welcome, "+msg+" !")
+            self.sub_message.configure(text="What would you like to do?")
+            self.clear_info_message()
             self.borrow_button['state'] = tkinter.NORMAL
             self.return_button['state'] = tkinter.NORMAL
         except Queue.Empty:
@@ -147,16 +161,20 @@ class GUI:
             if (str(id) in db_mahasiswa_ids):
                name = str(db_mahasiswa_name[db_mahasiswa_ids.index(id)]).strip()
                break
-            self.message.configure(text="KTM not recognized! Please scan a valid KTM !")
-            self.master.after(2000,self.printbackMessage)
+            self.set_info_message("KTM not recognized! Please scan a valid KTM !")
+            #self.master.after(2000,self.printbackMessage)
         
         # placeholder code =========================================
+        # self.set_info_message("KTM not recognized! Please scan a valid KTM !")
         # id, name =  "45025007063", "Michael"
         # time.sleep(2)
         # end placeholder code =====================================
         return id, name
 
     def update_data(self):
+        ThreadedTaskUpdateData(self.update_data_functions).start()
+
+    def update_data_functions(self):
         mahasiswa_sheet = sh.worksheet("Mahasiswa")
         global mahasiswa_ids
         mahasiswa_ids = mahasiswa_sheet.col_values(1) #Get Student IDs
@@ -173,7 +191,30 @@ class GUI:
         session_mahasiswa_id = session_sheet.col_values(1) #get mahasiswa IDs list
         session_item_id = session_sheet.col_values(4) #get borrowed items, in concatenated string, separator ","
         session_item_name = session_sheet.col_values(5) #get borrowed items, in concatenated string, separator ","
-        session_id_list = session_sheet.col_values(6) #get session id list
+        #session_id_list = session_sheet.col_values(6) #get session id list
+
+
+#PLACEHOLDER FUNCTIONS
+    def borrow_solder(self):
+        time.sleep(2)
+        return "794796054884", "Solder"
+    def borrow_mul1(self):
+        time.sleep(4)
+        return "320695199595", "Multimeter #1"
+    def borrow_invalid(self):
+        time.sleep(6)
+        return "123123123323", "blyat"
+    def borrow_mul2(self):
+        time.sleep(8)
+        return "236830417729", "Multimeter #2"
+    def borrow_solder2(self):
+        time.sleep(10)
+        return "794796054884", "Solder"
+    def ktm_michael(self):
+        time.sleep(13)
+        return "45025007063", "Michael"
+    
+
 
 #BORROW FUNCTION, INCLUDES RFID READ AND MANAGING GUI WHILE BORROWING
     def borrow_function(self):
@@ -185,7 +226,7 @@ class GUI:
             name_item = str(name_item).strip()
             if (id_item in db_item_list or id_item == self.USER_ID):
                 break
-            self.item_message.configure(text="RFID Tag not recognized! Please scan KTM or Valid Tags only!")
+            self.set_info_message("RFID Tag not recognized! Please scan KTM or Valid Tags only!")
 
 
         #placeholder code ====================================================
@@ -201,84 +242,96 @@ class GUI:
         self.item_ids = set() #clear item sets to check for uniques
         self.item_indexes = set() #clear item indexes 
         self.sessions = []
-        self.tempitem_Message = "" #Reset Temporary Message
-
+        self.tempitem_Message = "" #List of all item currently on "cart"
+        
         self.borrow_button['state']=tkinter.DISABLED #disable buttons
         self.return_button['state']=tkinter.DISABLED #disable buttons
         self.queue = Queue.Queue() #queue to store RFID read result, is used to let the GUI know that read is done or not
        
-        self.message.configure(text="Item Borrowing")
-        self.item_message.configure(text="Scan the item, Scan your KTM to finish scanning items!\nScan your KTM to cancel borrow process")
+        self.message.configure(text="Borrowing Item(s)")
+        self.sub_message.configure(text="Scan the item, Scan your KTM to finish scanning items!\nScan your KTM to cancel borrow process")
+        self.list_message.configure(text="")
 
         ThreadedTask(self.queue, self.borrow_function).start() #start borrow_function at other thread        
+        # #placeholder routine===============================
+        # ThreadedTask(self.queue, self.borrow_solder).start()       
+        # ThreadedTask(self.queue, self.borrow_mul1).start()       
+        # ThreadedTask(self.queue, self.borrow_invalid).start()       
+        # ThreadedTask(self.queue, self.borrow_mul2).start()       
+        # ThreadedTask(self.queue, self.borrow_solder2).start()       
+        # ThreadedTask(self.queue, self.ktm_michael).start()       
+        # #=====================================================
+        
         self.master.after(100, self.process_borrow) #schedule after 100ms, run process_queue function  
-
 
     def process_borrow(self):
         try:
             id_item = self.queue.get(0) #get id result
             name_item = self.queue.get(0) #get name result
             
-            if id_item in db_item_list and db_item_status[db_item_list.index(id_item)] == "Available": #check if it an item and if it is available
-                # Get item indexes
-                self.item_indexes.add(db_item_list.index(id_item))
+            if id_item in db_item_list: #check if it an item and if it is available
+                if db_item_status[db_item_list.index(id_item)] == "Available":
+                    # Get item indexes
+                    self.item_indexes.add(db_item_list.index(id_item))
 
-                if id_item in self.item_ids: #if item is a duplicate
-                    print(f"Item: {name_item} has already been added") # comment this line to not clutter console?
-                    self.item_message.configure(text="Item ")
-                    Item_Name = [Item_Name for Item_Name in self.items if id_item in Item_Name][0]
-                    self.item_message['text'] += Item_Name[1]+" has already been added!"
-                    self.master.after(2000,self.printbackItem_Message)
+                    if id_item in self.item_ids: #if item is a duplicate
+                        print(f"Item: {name_item} has already been added") # comment this line to not clutter console?
+                        self.set_info_message("Item "+ name_item + " has already been added!")
+                        #continue
+                    else: #not a duplicate
+                        self.item_ids.add(id_item) #add to set
+                        curr_time = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")
+                        newRow = [id_item, name_item, self.USER_ID, self.USER_NAME, curr_time]
+                        self.items.append(newRow)
+                        print(f"Item: {name_item} added")  
+                        #Print Message (List style)
+                        self.list_message['text'] += "- " + name_item + " has been added\n" 
+                        self.clear_info_message()
+                        flash_led()
 
-                    #continue
-                else:
-                    self.item_ids.add(id_item) #add to set
-                    curr_time = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M")
-                    newRow = [id_item, name_item, self.USER_ID, self.USER_NAME, curr_time]
-                    self.items.append(newRow)
-                    print(f"Item: {name_item} added")  
-                    #Store and print Message
-                    self.tempitem_Message = "Item "
-                    for name in self.items:
-                        self.tempitem_Message += str(name[1]) 
-                        if (self.items.index(name)+1)!=len(self.items):
-                            self.tempitem_Message += ", "
-                    self.tempitem_Message +=" will be borrowed."
-                    self.item_message.configure(text=f"{self.tempitem_Message}")
-                    # flash_led()
+                else: # not available
+                    self.set_info_message("Item "+name_item+ " is not available!")
                 
                 ThreadedTask(self.queue, self.borrow_function).start() #start borrow_function at other thread again        
                 self.master.after(100, self.process_borrow) #wait for result again
-            elif id_item == self.USER_ID and len(self.item_ids)==0:
-                self.item_message.configure(text="Cancelling Item Borrowing")
-                self.borrow_button['state']=tkinter.NORMAL #enable buttons
-                self.return_button['state']=tkinter.NORMAL #enable buttons
+
 
             elif id_item == self.USER_ID: #if ktm, append to gsheet  and end process 
-                print("Ending scanning process...")
-                log_sheet.append_rows(self.items)
-                curr_time = str(datetime.datetime.now())
-                
-                print("Please Wait...\n")
+                if len(self.item_ids) == 0: #empty "cart"
+                    self.message.configure(text=f"Welcome, {self.USER_NAME}!")
+                    self.sub_message.configure(text="Item Borrowing Cancelled!")
+                    self.list_message.configure(text="")
+                    self.clear_info_message()
+                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
+                    self.return_button['state']=tkinter.NORMAL #enable buttons
 
-                # Update Item Status
-                for i in self.item_indexes:
-                    item_sheet.update_cell(i+1, 3, 'Unavailable')
-                    item_sheet.update_cell(i+1, 4, str(self.USER_NAME))
-                
-                for item in self.items:
-                    newRow = [self.USER_ID, self.USER_NAME, curr_time, item[0], item[1]]
-                    self.sessions.append(newRow)
-                session_sheet.append_rows(self.sessions)
+                else: #end scan process and submit to database
+                    self.sub_message.configure(text="Ending scan process...")
+                    #log_sheet.append_rows(self.items)
+                    curr_time = str(datetime.datetime.now())
+                    
+                    # Update Item Status
+                    for i in self.item_indexes:
+                        item_sheet.update_cell(i+1, 3, 'Unavailable')
+                        item_sheet.update_cell(i+1, 4, str(self.USER_NAME))
+                    
+                    for item in self.items:
+                        newRow = [self.USER_ID, self.USER_NAME, curr_time, item[0], item[1]]
+                        self.sessions.append(newRow)
+                    session_sheet.append_rows(self.sessions)
 
-                
-                print("Success!!!\n")
-                
-                self.message['text'] ="Welcome, "+self.USER_NAME+" !"
-                self.borrow_button['state']=tkinter.NORMAL #enable buttons
-                self.return_button['state']=tkinter.NORMAL #enable buttons
-                self.update_data() #update data
-                self.item_message.configure(text="Borrow success!")
+                    self.message['text'] ="Welcome, "+self.USER_NAME+" !"
+                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
+                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                    self.update_data() #update data
+                    self.sub_message.configure(text="Borrow success!")
+                    self.list_message.configure(text="")
+                    self.clear_info_message()
+
+            else: 
+                self.set_info_message("Item "+name_item+ " is not a valid item!")
+                ThreadedTask(self.queue, self.borrow_function).start() #start borrow_function at other thread again        
+                self.master.after(100, self.process_borrow)
 
         except Queue.Empty:
             self.master.after(100, self.process_borrow)
@@ -288,71 +341,133 @@ class GUI:
         self.borrow_button['state']=tkinter.DISABLED #disable buttons
         self.return_button['state']=tkinter.DISABLED #disable buttons
         self.frames = []
-        index = []
+        self.index = []
+        self.item_label_pointer = {}
+        self.item_returning = set()
+        self.curr_item_id = []
+        self.index_returning = []
         for i, x in enumerate(session_mahasiswa_id):
             if x == self.USER_ID:
-                index.append(i)
-        if len(index) != 0 :
+                self.index.append(i)
+                self.curr_item_id.append(session_item_id[i])
+        if len(self.index) != 0 :
             self.message.configure(text="Item Borrowed by "+self.USER_NAME)
 
-            self.item_message.configure(text="Scan Item ")
+            self.sub_message.configure(text="Scan item tag to return it, scan KTM to finish")
 
-            for idx, value in enumerate(index):
+            for idx, value in enumerate(self.index):
                 session_frame = Frame(self.master, borderwidth=2, relief="solid")
                 session_frame.pack(side=TOP, pady=10, padx=10)
                 self.frames.append(session_frame)
-                item_frame = Frame(session_frame)
-                item_frame.pack(side=LEFT)
-                items_name = session_item_name[value]
-                item = Label(item_frame, text=str(idx+1)+". " + items_name, font=("Arial", 12))
-                item.pack(side=TOP)
-                button_session = Button(session_frame, command= lambda value=value: self.end_session(value))
-                button_session.configure(
-                    text="End session", background="Grey",
-                    padx=10
-                    )
-                button_session.pack(side=RIGHT, padx=10, pady=10)
+                item_label = Label(session_frame, text=str(idx+1)+". " + session_item_name[value], font=("Arial", 12))
+                item_label.pack(side=LEFT)
+                
+                self.item_label_pointer[session_item_id[value]] = item_label, value #reference pointer 
 
-
-            print("Which session do you want to conclude?")
+            ThreadedTask(self.queue, self.return_function).start()
+            # #placeholder routine===============================
+            # ThreadedTask(self.queue, self.borrow_solder).start()       
+            # ThreadedTask(self.queue, self.borrow_mul1).start()       
+            # ThreadedTask(self.queue, self.borrow_invalid).start()       
+            # ThreadedTask(self.queue, self.borrow_mul2).start()       
+            # ThreadedTask(self.queue, self.borrow_solder2).start()       
+            # ThreadedTask(self.queue, self.ktm_michael).start()       
+            # #=====================================================
+            
+            self.master.after(100, self.process_return)
+            print("Which item do you want to return?")
                 
         else:
             self.borrow_button['state']=tkinter.NORMAL #enable buttons
             self.return_button['state']=tkinter.NORMAL #enable buttons
-            self.item_message.configure(text="No session available!")
+            self.sub_message.configure(text="No session available!")
             print("Session not available, returning")
 
+    def return_function(self):
+        # DO RFID READS HERE
+        id_item, name_item = "", ""
+        while True:
+            id_item, name_item = reader.read()
+            id_item = str(id_item).strip()
+            name_item = str(name_item).strip()
+            if (id_item in db_item_list or id_item == self.USER_ID):
+                break
+            self.set_info_message("RFID Tag not recognized! Please scan KTM or Valid Tags only!")
 
-    def end_session(self, idx):
-        #Update Item Status
-        items_ids = session_item_id[idx].split(',')
-        item_indexes = set()
-        for i in items_ids: 
-            item_indexes.add(db_item_list.index(i))
 
-        for i in item_indexes:
-            item_sheet.update_cell(i+1, 3, "Available")
-            item_sheet.update_cell(i+1, 4, "")
+        #placeholder code ====================================================
+        # id_item, name_item =  "794796054884", "Solder"
+        # time.sleep(2)
+        #end placeholder code ================================================
 
-        # Delete Session 
-        session_sheet.delete_rows(idx+1) # +1 for adjusting row header
-        
-        # print("IDX = "+str(idx))
-        # for i in items_ids:
-        #     print(i)
+        return id_item, name_item
 
-        for frame in self.frames:
-            for widget in frame.winfo_children():    
-                widget.destroy()
-            frame.pack_forget()
-        
-        self.item_message.configure(text="Session concluded successfully!")
-        self.message.configure(text="Welcome, "+self.USER_NAME+" !")
-        self.borrow_button['state']=tkinter.NORMAL #enable buttons
-        self.return_button['state']=tkinter.NORMAL #enable buttons
-        self.update_data()
-        print("Session concluded successfully!")
+    def process_return(self):
+        try:
+            id_item = self.queue.get(0) #get id result
+            name_item = self.queue.get(0) #get name result
 
+            if id_item in self.curr_item_id: #valid scan (in current session)
+                if id_item not in self.item_returning: #not scanned yet 
+                    self.item_returning.add(id_item)
+                    label, idx = self.item_label_pointer[id_item]
+                    label.configure(bg="pale green")
+                    self.index_returning.append(idx)
+                    self.set_info_message("Marked " + name_item + " for returning")
+                else: #already scanned
+                    self.set_info_message("Item " + name_item+ " has already been marked for returning" )
+                ThreadedTask(self.queue, self.return_function).start()
+                self.master.after(100, self.process_return)
+            elif id_item in self.item_ids: #valid but not borrowed
+                self.set_info_message("Item " + name_item + " is not borrowed by this user!")
+                ThreadedTask(self.queue, self.return_function).start()
+                self.master.after(100, self.process_return)
+           
+            elif id_item == self.USER_ID: #user id, end this returning
+                if len(self.item_returning) == 0: #nothing is selected
+                    self.sub_message.configure(text="Nothing selected!")
+                    self.clear_info_message()
+                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
+                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                else: #some is selected
+                    item_indexes = set()
+                    self.sub_message.configure(text="Returning selected items, please wait...")
+                    for i in self.item_returning:
+                        item_indexes.add(db_item_list.index(i))
+                    for i in item_indexes:
+                        item_sheet.update_cell(i+1, 3, "Available")
+                        item_sheet.update_cell(i+1, 4, "")
+                    # Delete Session 
+                    self.index_returning.sort(reverse=True) #descending order since gspread deletes a row THEN readjust all index
+                    for i in self.index_returning:
+                        print(f"i = {i}, item name = {session_item_name[i]}")
+                        session_sheet.delete_rows(i+1) # +1 for adjusting row header
+                    # Delete frames
+                    for frame in self.frames:
+                        for widget in frame.winfo_children():    
+                            widget.destroy()
+                        frame.pack_forget()
+                    #Re initialize
+                    self.sub_message.configure(text="Item(s) successfully returned!")
+                    self.message.configure(text="Welcome, "+self.USER_NAME+" !")
+                    self.clear_info_message()
+                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
+                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                    self.update_data()
+                    print("Session concluded successfully!")
+
+            else: #invalid scan
+                self.set_info_message("Please scan a valid RFID tag!")
+                ThreadedTask(self.queue, self.return_function).start()
+                self.master.after(100, self.process_return)
+
+            
+        except Queue.Empty:
+            self.master.after(100, self.process_return)
+
+
+
+   
 
 
 #MULTITHREAD CLASS, DO BLOCKING TASK HERE
@@ -368,6 +483,12 @@ class ThreadedTask(threading.Thread):
         self.queue.put(id)
         self.queue.put(name)
 
+class ThreadedTaskUpdateData(threading.Thread):
+    def __init__(self, task):
+        threading.Thread.__init__(self)
+        self.task = task
+    def run(self):
+        self.task()
 
 #MAIN DRIVER? TO INITIATE TKINTER SINCE TKINTER IS BLOCKING GUI
 if __name__ == '__main__':
