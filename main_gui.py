@@ -187,10 +187,12 @@ class GUI:
         #log_sheet = sh.worksheet("Logs") #not updated because no reading needed
 
         session_sheet = sh.worksheet("Session")
-        global session_mahasiswa_id, session_item_id, session_item_name, session_id_list
+        global session_mahasiswa_id, session_item_id, session_item_name
         session_mahasiswa_id = session_sheet.col_values(1) #get mahasiswa IDs list
         session_item_id = session_sheet.col_values(4) #get borrowed items, in concatenated string, separator ","
         session_item_name = session_sheet.col_values(5) #get borrowed items, in concatenated string, separator ","
+        for i, x in enumerate(session_mahasiswa_id):
+            print(f"{i}")
         #session_id_list = session_sheet.col_values(6) #get session id list
 
 
@@ -424,6 +426,11 @@ class GUI:
                 self.master.after(100, self.process_return)
            
             elif id_item == self.USER_ID: #user id, end this returning
+                # Delete frames
+                for frame in self.frames:
+                    for widget in frame.winfo_children():    
+                        widget.destroy()
+                    frame.pack_forget()
                 if len(self.item_returning) == 0: #nothing is selected
                     self.sub_message.configure(text="Nothing selected!")
                     self.clear_info_message()
@@ -442,11 +449,6 @@ class GUI:
                     for i in self.index_returning:
                         print(f"i = {i}, item name = {session_item_name[i]}")
                         session_sheet.delete_rows(i+1) # +1 for adjusting row header
-                    # Delete frames
-                    for frame in self.frames:
-                        for widget in frame.winfo_children():    
-                            widget.destroy()
-                        frame.pack_forget()
                     #Re initialize
                     self.sub_message.configure(text="Item(s) successfully returned!")
                     self.message.configure(text="Welcome, "+self.USER_NAME+" !")
