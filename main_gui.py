@@ -1,6 +1,7 @@
 import tkinter
 from tkinter import *
 from tkinter import ttk
+from tkinter import font as tkFont
 import queue as Queue
 import threading
 import time
@@ -68,6 +69,9 @@ def flash_led():
 class GUI:
     def __init__(self, master):
         self.master = master
+        self.logout_frame = Frame(self.master)
+        self.logout_frame.pack(side=TOP, fill=tkinter.BOTH)
+
         self.top_frame = Frame(self.master)
         self.top_frame.pack(side=TOP)
 
@@ -83,7 +87,11 @@ class GUI:
         self.item_ids = set() #item sets to check for uniques
         self.item_indexes = set() #item indexes 
         self.sessions = [] #session information
- 
+        self.tempMessage = "" #Store Temporary Message that will be displayed periodically
+        self.tempitem_Message = "" #Store Temporary Item Message that will be displayed periodically
+        
+        
+
         #MESSAGE CONFIGURATION
         self.message = Label(self.top_frame, text="Welcome to FTI Lab, please scan your KTM", font=("Arial Bold", 24))
         self.message.pack(side=TOP, padx=10)
@@ -115,6 +123,16 @@ class GUI:
         self.return_button.pack(side=RIGHT, pady=10, padx=10)
         self.return_button['state'] = tkinter.DISABLED #disable until KTM Scan is successful
         
+        #LOGOUT BUTTON CONFIGURATION
+        self.logout_button = Button(self.logout_frame, command=logout)
+        self.logout_button.configure(
+            text="Logout", background="Grey", 
+            font= tkFont.Font(size=12)
+        )
+        self.logout_button.pack(side=RIGHT, padx=10, pady=10)
+        self.logout_button['state'] = tkinter.DISABLED
+
+
         #AUTHORIZE USER USING KTM
         self.queue = Queue.Queue()
         ThreadedTask(self.queue, self.ktm_scan).start()
@@ -136,8 +154,8 @@ class GUI:
             self.message.configure(text="Welcome, "+msg+" !")
             self.sub_message.configure(text="What would you like to do?")
             self.clear_info_message()
-            self.borrow_button['state'] = tkinter.NORMAL
-            self.return_button['state'] = tkinter.NORMAL
+            self.logout_button['state'] = tkinter.NORMAL
+            self.enable_buttons()
         except Queue.Empty:
             self.master.after(100, self.ktm_verify)
 
@@ -152,7 +170,6 @@ class GUI:
                name = str(db_mahasiswa_name[db_mahasiswa_ids.index(id)]).strip()
                break
             self.set_info_message("KTM not recognized! Please scan a valid KTM !")
-            #self.master.after(2000,self.printbackMessage)
         
         # placeholder code =========================================
         # self.set_info_message("KTM not recognized! Please scan a valid KTM !")
@@ -162,8 +179,9 @@ class GUI:
         return id, name
 
     def update_data(self):
+        self.logout_button['state']=tkinter.DISABLED
+        self.set_info_message("Updating data, please wait!")
         ThreadedTaskUpdateData(self.update_data_functions).start()
-        self.master.after(100,self.update_button)
 
     def update_data_functions(self):
         mahasiswa_sheet = sh.worksheet("Mahasiswa")
@@ -182,12 +200,20 @@ class GUI:
         session_mahasiswa_id = session_sheet.col_values(1) #get mahasiswa IDs list
         session_item_id = session_sheet.col_values(4) #get borrowed items, in concatenated string, separator ","
         session_item_name = session_sheet.col_values(5) #get borrowed items, in concatenated string, separator ","
-        for i, x in enumerate(session_mahasiswa_id):
-            print(f"{i}")
+        
+        self.logout_button['state'] = tkinter.NORMAL
+        self.enable_buttons()
+        # for i, x in enumerate(session_mahasiswa_id):
+        #     print(f"{i}")
         #session_id_list = session_sheet.col_values(6) #get session id list
 
-    def update_button(self):
-        
+    def enable_buttons(self):
+        self.borrow_button['state']=tkinter.NORMAL #enable buttons
+        self.return_button['state']=tkinter.NORMAL #enable buttons
+        if(self.info_message['text'] == "Updating data, please wait!"):
+            self.clear_info_message()
+
+    
 
 #PLACEHOLDER FUNCTIONS
     # def borrow_solder(self):
@@ -297,8 +323,7 @@ class GUI:
                     self.sub_message.configure(text="Item Borrowing Cancelled!")
                     self.list_message.configure(text="")
                     self.clear_info_message()
-                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
-                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                    self.enable_buttons() #enable both button
 
                 else: #end scan process and submit to database
                     self.sub_message.configure(text="Ending scan process...")
@@ -316,8 +341,7 @@ class GUI:
                     session_sheet.append_rows(self.sessions)
 
                     self.message['text'] ="Welcome, "+self.USER_NAME+" !"
-                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
-                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                    self.enable_buttons() #enable buttons
                     self.update_data() #update data
                     self.sub_message.configure(text="Borrow success!")
                     self.list_message.configure(text="")
@@ -373,8 +397,7 @@ class GUI:
             print("Which item do you want to return?")
                 
         else:
-            self.borrow_button['state']=tkinter.NORMAL #enable buttons
-            self.return_button['state']=tkinter.NORMAL #enable buttons
+            self.enable_buttons() #enable buttons
             self.sub_message.configure(text="No session available!")
             print("Session not available, returning")
 
@@ -427,8 +450,7 @@ class GUI:
                 if len(self.item_returning) == 0: #nothing is selected
                     self.sub_message.configure(text="Nothing selected!")
                     self.clear_info_message()
-                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
-                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                    self.enable_buttons() #enable buttons
                 else: #some is selected
                     item_indexes = set()
                     self.sub_message.configure(text="Returning selected items, please wait...")
@@ -446,8 +468,7 @@ class GUI:
                     self.sub_message.configure(text="Item(s) successfully returned!")
                     self.message.configure(text="Welcome, "+self.USER_NAME+" !")
                     self.clear_info_message()
-                    self.borrow_button['state']=tkinter.NORMAL #enable buttons
-                    self.return_button['state']=tkinter.NORMAL #enable buttons
+                    self.enable_buttons() #enable buttons
                     self.update_data()
                     print("Session concluded successfully!")
 
@@ -487,12 +508,16 @@ class ThreadedTaskUpdateData(threading.Thread):
 
 #MAIN DRIVER? TO INITIATE TKINTER SINCE TKINTER IS BLOCKING GUI
 if __name__ == '__main__':
-    root = Tk()
-    root.title("Inventory System GUI")
-    main_ui = GUI(root)
-    root.mainloop()
 
+    def logout():
+        root.destroy()
+        main_init()
 
+    def main_init():
+        global root
+        root = Tk()
+        root.title("Inventory System GUI")
+        main_ui = GUI(root)
+        root.mainloop()
 
-
-
+    main_init()
