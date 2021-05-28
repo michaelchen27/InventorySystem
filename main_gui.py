@@ -302,7 +302,7 @@ class GUI:
 
                 else: #end scan process and submit to database
                     self.sub_message.configure(text="Ending scan process...")
-                    #log_sheet.append_rows(self.items)
+                    log_sheet.append_rows(self.items)
                     curr_time = str(datetime.datetime.now())
                     
                     # Update Item Status
