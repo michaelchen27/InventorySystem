@@ -54,16 +54,7 @@ session_item_name = session_sheet.col_values(5) #get borrowed items
 
 # RFID Setup
 reader = SimpleMFRC522()
-
-# LED GPIO Setup
-GPIO.setup(12, GPIO.OUT)
-
-def flash_led():
-    GPIO.output(12, GPIO.HIGH)
-    time.sleep(0.5)
-    GPIO.output(12, GPIO.LOW)
-
-
+reader.READER.Write_MFRC522(reader.READER.RFCfgReg, (0x07 << 4))
 
 #TKINTER MAIN CLASS, MANAGES EVERYTHING
 class GUI:
@@ -182,6 +173,7 @@ class GUI:
         self.logout_button['state']=tkinter.DISABLED
         self.set_info_message("Updating data, please wait!")
         ThreadedTaskUpdateData(self.update_data_functions).start()
+
 
     def update_data_functions(self):
         mahasiswa_sheet = sh.worksheet("Mahasiswa")
@@ -308,7 +300,6 @@ class GUI:
                         #Print Message (List style)
                         self.list_message['text'] += "- " + name_item + " has been added\n" 
                         self.clear_info_message()
-                        flash_led()
 
                 else: # not available
                     self.set_info_message("Item "+name_item+ " is not available!")
@@ -341,7 +332,6 @@ class GUI:
                     session_sheet.append_rows(self.sessions)
 
                     self.message['text'] ="Welcome, "+self.USER_NAME+" !"
-                    self.enable_buttons() #enable buttons
                     self.update_data() #update data
                     self.sub_message.configure(text="Borrow success!")
                     self.list_message.configure(text="")
